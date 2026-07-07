@@ -1,0 +1,39 @@
+name: DTFX Signal Helper - Hourly Scan (15m & 1h)
+
+on:
+  schedule:
+    # 每小時的第 0 分鐘運行（UTC）
+    - cron: '0 * * * *'
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run DTFX Signal Helper
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          python dtfx_signal_helper_v2.py
+
+      - name: Log execution
+        if: always()
+        run: |
+          echo "✅ Signal scan completed at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
